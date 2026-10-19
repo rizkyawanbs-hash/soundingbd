@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Unit Sounding & Daily Equipment - PT TMMS</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF.js untuk membaca file PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-500 text-slate-900 p-2.5 rounded-lg font-bold text-xl">
+                    <i class="fa-solid fa-truck-monster"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">DATA UNIT SOUNDING & DAILY EQUIPMENT</h1>
+                    <p class="text-xs text-slate-400">PT. Tambang Meranti Mulia Sejahtera (PT TMMS) • Cloud Sync</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="loadDataFromCloud()" class="bg-blue-600 hover:bg-blue-500 px-3.5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-rotate"></i> Refresh Data
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Upload PDF Box Section -->
+        <div class="bg-gradient-to-r from-blue-900 to-slate-800 text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="space-y-2">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf text-red-400 text-xl"></i> Upload PDF Daily Equipment Harian
+                </h2>
+                <p class="text-sm text-slate-300">
+                    Upload file PDF laporan harian shift Anda di sini. Data akan otomatis ter-update dan tersinkron ke Google Sheets untuk semua perangkat.
+                </p>
+            </div>
+            <div class="w-full md:w-auto flex items-center gap-3">
+                <label class="cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-5 py-3 rounded-xl transition shadow-md flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Pilih File PDF
+                    <input type="file" id="pdfFileDrop" accept=".pdf" class="hidden" onchange="handlePdfUpload(event)">
+                </label>
+            </div>
+        </div>
+
+        <div id="loading" class="bg-blue-50 text-blue-700 p-4 rounded-xl text-center font-semibold hidden">
+            <i class="fa-solid fa-spinner fa-spin"></i> Menyinkronkan data dengan Google Sheets...
+        </div>
+
+        <!-- Dashboard Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Populasi Unit</p>
+                    <h3 id="statTotal" class="text-2xl font-extrabold text-slate-800 mt-1">0</h3>
+                </div>
+                <div class="bg-blue-50 text-blue-600 p-3.5 rounded-xl text-lg">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Wajib Sounding (BD > 2H)</p>
+                    <h3 id="statWajib" class="text-2xl font-extrabold text-red-600 mt-1">0</h3>
+                </div>
+                <div class="bg-red-50 text-red-600 p-3.5 rounded-xl text-lg">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sudah Sounding</p>
+                    <h3 id="statSudah" class="text-2xl font-extrabold text-emerald-600 mt-1">0</h3>
+                </div>
+                <div class="bg-emerald-50 text-emerald-600 p-3.5 rounded-xl text-lg">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Unit Ready (RFU)</p>
+                    <h3 id="statRfu" class="text-2xl font-extrabold text-sky-600 mt-1">0</h3>
+                </div>
+                <div class="bg-sky-50 text-sky-600 p-3.5 rounded-xl text-lg">
+                    <i class="fa-solid fa-circle-play"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Table Container -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table id="unitTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200">
+                            <th class="py-3 px-4 font-bold">No</th>
+                            <th class="py-3 px-4 font-bold">Kode Unit</th>
+                            <th class="py-3 px-4 font-bold">Kategori</th>
+                            <th class="py-3 px-4 font-bold">Status Unit & Kendala</th>
+                            <th class="py-3 px-4 font-bold">Tanggal BD</th>
+                            <th class="py-3 px-4 font-bold">Tanggal Sounding</th>
+                            <th class="py-3 px-4 font-bold text-center">Control Data</th>
+                            <th class="py-3 px-4 font-bold text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyHFE6QgSfIlcef6ijtZnmjY0IZ641V7xaFZ9vShZAA6_HouKj2jz0oS_SC4sF0VW0n/exec';
+        let unitsData = [];
+        const reportDate = new Date('2026-10-19T07:00:00');
+
+        async function loadDataFromCloud() {
+            document.getElementById("loading").style.display = "block";
+            try {
+                let response = await fetch(scriptURL);
+                unitsData = await response.json();
+                renderTable();
+            } catch (error) {
+                alert("Gagal memuat data dari Google Sheets.");
+            }
+            document.getElementById("loading").style.display = "none";
+        }
+
+        function calculateDaysBD(bdDateStr) {
+            if (!bdDateStr) return 0;
+            const bd = new Date(bdDateStr);
+            const diffTime = reportDate - bd;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 ? diffDays : 0;
+        }
+
+        function renderTable() {
+            const tbody = document.querySelector("#unitTable tbody");
+            tbody.innerHTML = "";
+
+            let total = unitsData.length;
+            let wajibCount = 0;
+            let sudahCount = 0;
+            let rfuCount = 0;
+
+            unitsData.forEach((item, index) => {
+                let bdDays = calculateDaysBD(item.bdDate);
+                let isWajib = (item.statusUnit === 'BD' && bdDays > 2 && item.soundingDate !== '2026-10-19');
+                if (isWajib && item.statusSounding !== 'SUDAH') {
+                    item.statusSounding = 'WAJIB';
+                } else if (item.statusUnit !== 'BD') {
+                    item.statusSounding = 'RFU';
+                }
+
+                if (item.statusSounding === 'WAJIB') wajibCount++;
+                else if (item.statusSounding === 'SUDAH') sudahCount++;
+                else rfuCount++;
+
+                let badgeControl = '';
+                if (item.statusSounding === 'WAJIB') {
+                    badgeControl = `<span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">WAJIB SOUNDING</span>`;
+                } else if (item.statusSounding === 'SUDAH') {
+                    badgeControl = `<span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">SUDAH SOUNDING</span>`;
+                } else {
+                    badgeControl = `<span class="px-3 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-700">READY (RFU)</span>`;
+                }
+
+                let tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-slate-500">${index + 1}</td>
+                    <td class="py-3 px-4 font-bold text-slate-900">${item.code}</td>
+                    <td class="py-3 px-4 text-slate-600 text-xs">${item.category}</td>
+                    <td class="py-3 px-4 text-xs">
+                        <span class="font-bold ${item.statusUnit === 'BD' ? 'text-red-600' : 'text-emerald-600'}">[${item.statusUnit}]</span> ${item.desc}
+                    </td>
+                    <td class="py-3 px-4 text-xs">${item.bdDate || '-'}</td>
+                    <td class="py-3 px-4 text-xs">${item.soundingDate || 'Belum'}</td>
+                    <td class="py-3 px-4 text-center">${badgeControl}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="updateSounding(${item.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
+                            <i class="fa-solid fa-check"></i> Sounding
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("statTotal").innerText = total;
+            document.getElementById("statWajib").innerText = wajibCount;
+            document.getElementById("statSudah").innerText = sudahCount;
+            document.getElementById("statRfu").innerText = rfuCount;
+        }
+
+        async function updateSounding(id) {
+            let unit = unitsData.find(u => u.id == id);
+            if (!unit) return;
+
+            let newStatus = unit.statusSounding === 'SUDAH' ? 'WAJIB' : 'SUDAH';
+            let newDate = newStatus === 'SUDAH' ? '2026-10-19' : '';
+
+            unit.statusSounding = newStatus;
+            unit.soundingDate = newDate;
+            renderTable();
+
+            try {
+                await fetch(scriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update', id: id, statusSounding: newStatus, soundingDate: newDate })
+                });
+            } catch (error) {
+                console.error('Error syncing:', error);
+            }
+        }
+
+        async function handlePdfUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById("loading").style.display = "block";
+            const reader = new FileReader();
+            reader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                try {
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+                    }
+
+                    const lines = fullText.split('\n');
+                    let newUnits = [];
+                    let currentCategory = "EXCAVATOR";
+
+                    lines.forEach((line) => {
+                        line = line.trim();
+                        if (!line) return;
+                        if (line.includes("EXCAVATOR")) currentCategory = "EXCAVATOR";
+                        else if (line.includes("DT-") || line.includes("DUMP TRUCK")) currentCategory = "DUMP TRUCK";
+                        else if (line.includes("DZ-")) currentCategory = "DOZER";
+                        else if (line.includes("GSS")) currentCategory = "GSS";
+
+                        if (line.includes("BD") || line.includes("RFU")) {
+                            let parts = line.split(/\s+/);
+                            let code = parts[1] ? parts[0] + " " + parts[1] : parts[0];
+                            let statusUnit = line.includes("BD") ? "BD" : "RFU";
+
+                            newUnits.push({
+                                id: newUnits.length + 1,
+                                code: code,
+                                category: currentCategory,
+                                statusUnit: statusUnit,
+                                desc: line,
+                                bdDate: statusUnit === 'BD' ? "2026-10-19 07:00" : "",
+                                soundingDate: statusUnit === 'RFU' ? "2026-10-19" : "",
+                                statusSounding: statusUnit === 'BD' ? "WAJIB" : "RFU"
+                            });
+                        }
+                    });
+
+                    if (newUnits.length > 0) {
+                        unitsData = newUnits;
+                        renderTable();
+                        
+                        await fetch(scriptURL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'bulk_upload', units: newUnits })
+                        });
+
+                        alert(`Berhasil mengimport ${newUnits.length} unit dan mensinkronkan ke Google Sheets!`);
+                    } else {
+                        alert("Format teks PDF tidak dikenali.");
+                    }
+                } catch (error) {
+                    alert("Gagal memproses file PDF.");
+                }
+                document.getElementById("loading").style.display = "none";
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        loadDataFromCloud();
+    </script>
+</body>
+</html>
