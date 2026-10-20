@@ -159,7 +159,7 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbw54g92eMbOd3nzzU4dDGzoE3YnI4oBZFGxPgTMH-nuY579KwsXliANWZgpGx--AjqI/exec';
         let reportDate = new Date();
 
-        // Master Data Populasi Unit PT TMMS
+        // Master Data Default PT TMMS sebagai fallback
         const defaultUnits = [
             { id: 1, code: "EXCAT-01", category: "EXCAVATOR", statusUnit: "BD", desc: "Caterpillar 340D - Can't start", bdDate: "2026-10-17 07:00", soundingDate: "", statusSounding: "WAJIB" },
             { id: 2, code: "EXCAT-02", category: "EXCAVATOR", statusUnit: "BD", desc: "Caterpillar 345GC - Pen cylinder boom", bdDate: "2026-10-05 07:00", soundingDate: "", statusSounding: "WAJIB" },
@@ -242,48 +242,59 @@
             { id: 79, code: "DT-074", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 80, code: "DT-075", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 81, code: "DT-076", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 82, code: "DT-077", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Transfer case", bdDate: "2026-10-04 09:25", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 82, code: "DT-077", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Transfer case", bdDate: "2026-10-04 09:25", "", statusSounding: "WAJIB" },
             { id: 83, code: "DT-085", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 84, code: "DT-086", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 85, code: "DT-087", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 86, code: "DT-092", category: "DUMP TRUCK", statusUnit: "RFU", desc: "FOTON - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 87, code: "DT-059", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Engine Overhaul", bdDate: "2025-09-30 19:45", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 87, code: "DT-059", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Engine Overhaul", bdDate: "2025-09-30 19:45", "", statusSounding: "WAJIB" },
             { id: 88, code: "DT-093", category: "DUMP TRUCK", statusUnit: "RFU", desc: "FOTON - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 89, code: "DZ-001", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal N", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 90, code: "DZ-002", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Standby ready Parkir - Spare", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 91, code: "DZ-004", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Idler", bdDate: "2026-09-11 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 91, code: "DZ-004", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Idler", bdDate: "2026-09-11 07:00", "", statusSounding: "WAJIB" },
             { id: 92, code: "DZ-017", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 93, code: "DZ-018", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Maintenance di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 94, code: "DZ-019", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal E", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 95, code: "DZ-005", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Radiator", bdDate: "2026-09-03 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 95, code: "DZ-005", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Radiator", bdDate: "2026-09-03 07:00", "", statusSounding: "WAJIB" },
             { id: 96, code: "DZ-007", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Standby ready Parkir - Spare", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 97, code: "DZ-008", category: "DOZER", statusUnit: "NO OPERATOR", desc: "KOMATSU D85E-SS - Operator tanpa keterangan", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 98, code: "DZ-014", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 99, code: "DZ-015", category: "DOZER", statusUnit: "RFU", desc: "CAT D6RD - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 100, code: "VB-GSS 502", category: "GRADER", statusUnit: "RFU", desc: "HAMM - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 101, code: "GD-004", category: "GRADER", statusUnit: "RFU", desc: "SANY - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 102, code: "GD-005", category: "GRADER", statusUnit: "RFU", desc: "SANY - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 103, code: "GD-001", category: "GRADER", statusUnit: "BD", desc: "SANY - Trouble Shooting back and Front", bdDate: "2026-01-28 16:05", soundingDate: "", statusSounding: "WAJIB" }
+            { id: 102, code: "GD-005", category: "GRADER", statusUnit: "GRADER", statusUnit: "RFU", desc: "SANY - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 103, code: "GD-001", category: "GRADER", statusUnit: "BD", desc: "SANY - Trouble Shooting back and Front", bdDate: "2026-01-28 16:05", "", statusSounding: "WAJIB" }
         ];
 
         let unitsData = [...defaultUnits];
 
         async function loadDataFromCloud() {
-            if (!scriptURL || scriptURL === 'https://script.google.com/macros/s/AKfycbw54g92eMbOd3nzzU4dDGzoE3YnI4oBZFGxPgTMH-nuY579KwsXliANWZgpGx--AjqI/exec') {
+            if (!scriptURL) {
                 renderTable();
                 return;
             }
+
+            // Ambil cache lokal terlebih dahulu agar langsung tampil instan
+            let cached = localStorage.getItem('tmms_units_cache');
+            if (cached) {
+                try {
+                    unitsData = JSON.parse(cached);
+                    filterTable();
+                } catch(e) {}
+            }
+
             document.getElementById("loading").classList.remove("hidden");
             try {
                 let response = await fetch(scriptURL);
                 let cloudData = await response.json();
                 if (cloudData && cloudData.length > 0) {
                     unitsData = cloudData;
+                    localStorage.setItem('tmms_units_cache', JSON.stringify(unitsData));
                 }
-                renderTable();
+                filterTable();
             } catch (error) {
                 console.error("Gagal memuat cloud:", error);
-                renderTable();
+                filterTable();
             }
             document.getElementById("loading").classList.add("hidden");
         }
@@ -301,19 +312,18 @@
             const tbody = document.querySelector("#unitTable tbody");
             tbody.innerHTML = "";
 
-            let total = dataToRender.length;
+            let total = unitsData.length;
             let wajibCount = 0;
             let sudahCount = 0;
             let rfuCount = 0;
 
-            // Hitung statistik keseluruhan dari data utama
             unitsData.forEach((item) => {
                 let bdDays = calculateDaysBD(item.bdDate);
                 let todayStr = reportDate.toISOString().slice(0, 10);
                 let isWajib = (item.statusUnit === 'BD' && bdDays > 2 && item.soundingDate !== todayStr);
                 
                 if (isWajib && item.statusSounding !== 'SUDAH') item.statusSounding = 'WAJIB';
-                else if (item.statusUnit !== 'BD') item.statusSounding = 'RFU';
+                else if (item.statusUnit !== 'BD' && item.statusSounding !== 'SUDAH') item.statusSounding = 'RFU';
 
                 if (item.statusSounding === 'WAJIB') wajibCount++;
                 else if (item.statusSounding === 'SUDAH') sudahCount++;
@@ -354,7 +364,7 @@
                 tbody.appendChild(tr);
             });
 
-            document.getElementById("statTotal").innerText = unitsData.length;
+            document.getElementById("statTotal").innerText = total;
             document.getElementById("statWajib").innerText = wajibCount;
             document.getElementById("statSudah").innerText = sudahCount;
             document.getElementById("statRfu").innerText = rfuCount;
@@ -368,11 +378,16 @@
             let newStatus = unit.statusSounding === 'SUDAH' ? 'WAJIB' : 'SUDAH';
             let newDate = newStatus === 'SUDAH' ? todayStr : '';
 
+            // Update status lokal
             unit.statusSounding = newStatus;
             unit.soundingDate = newDate;
-            filterTable(); // Refresh tabel dengan filter aktif
 
-            if (scriptURL && scriptURL !== 'https://script.google.com/macros/s/AKfycbw54g92eMbOd3nzzU4dDGzoE3YnI4oBZFGxPgTMH-nuY579KwsXliANWZgpGx--AjqI/exec') {
+            // Simpan ke cache lokal browser agar aman dari reset
+            localStorage.setItem('tmms_units_cache', JSON.stringify(unitsData));
+            filterTable();
+
+            // Kirim ke Google Sheets
+            if (scriptURL) {
                 try {
                     await fetch(scriptURL, {
                         method: 'POST',
@@ -420,6 +435,7 @@
                         }
                     });
 
+                    localStorage.setItem('tmms_units_cache', JSON.stringify(unitsData));
                     filterTable();
                     alert(`Berhasil memproses PDF! ${updatedCount} status unit diperbarui.`);
                 } catch (error) {
@@ -443,7 +459,6 @@
 
                 const matchSearch = item.code.toLowerCase().includes(search) || item.desc.toLowerCase().includes(search);
                 
-                // Logika Filter Status Wajib Sounding (hanya tampilkan yang BD > 2 Hari dan belum sounding)
                 let matchStatus = true;
                 if (statusFilter === 'WAJIB') {
                     matchStatus = isWajib && item.statusSounding !== 'SUDAH';
