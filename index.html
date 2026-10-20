@@ -25,7 +25,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-wide">DATA UNIT SOUNDING & DAILY EQUIPMENT</h1>
-                    <p class="text-xs text-slate-400">PT. Tambang Meranti Mulia Sejahtera (PT TMMS) • Cloud Sync</p>
+                    <p class="text-xs text-slate-400">PT. Tambang Meranti Mulia Sejahtera (PT TMMS) • Realtime Cloud Sync</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -60,7 +60,7 @@
         </div>
 
         <div id="loading" class="bg-blue-50 text-blue-700 p-4 rounded-xl text-center font-semibold hidden">
-            <i class="fa-solid fa-spinner fa-spin"></i> Memproses PDF dan menyinkronkan data...
+            <i class="fa-solid fa-spinner fa-spin"></i> Memproses data dengan Google Sheets...
         </div>
 
         <!-- Dashboard Summary Cards -->
@@ -159,7 +159,6 @@
         const scriptURL = 'https://script.google.com/macros/s/AKfycbw54g92eMbOd3nzzU4dDGzoE3YnI4oBZFGxPgTMH-nuY579KwsXliANWZgpGx--AjqI/exec';
         let reportDate = new Date();
 
-        // Master Data Default PT TMMS sebagai fallback
         const defaultUnits = [
             { id: 1, code: "EXCAT-01", category: "EXCAVATOR", statusUnit: "BD", desc: "Caterpillar 340D - Can't start", bdDate: "2026-10-17 07:00", soundingDate: "", statusSounding: "WAJIB" },
             { id: 2, code: "EXCAT-02", category: "EXCAVATOR", statusUnit: "BD", desc: "Caterpillar 345GC - Pen cylinder boom", bdDate: "2026-10-05 07:00", soundingDate: "", statusSounding: "WAJIB" },
@@ -242,39 +241,34 @@
             { id: 79, code: "DT-074", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 80, code: "DT-075", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 81, code: "DT-076", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 82, code: "DT-077", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Transfer case", bdDate: "2026-10-04 09:25", "", statusSounding: "WAJIB" },
+            { id: 82, code: "DT-077", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Transfer case", bdDate: "2026-10-04 09:25", soundingDate: "", statusSounding: "WAJIB" },
             { id: 83, code: "DT-085", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 84, code: "DT-086", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 85, code: "DT-087", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 86, code: "DT-092", category: "DUMP TRUCK", statusUnit: "RFU", desc: "FOTON - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 87, code: "DT-059", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Engine Overhaul", bdDate: "2025-09-30 19:45", "", statusSounding: "WAJIB" },
+            { id: 87, code: "DT-059", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Engine Overhaul", bdDate: "2025-09-30 19:45", soundingDate: "", statusSounding: "WAJIB" },
             { id: 88, code: "DT-093", category: "DUMP TRUCK", statusUnit: "RFU", desc: "FOTON - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 89, code: "DZ-001", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal N", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 90, code: "DZ-002", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Standby ready Parkir - Spare", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 91, code: "DZ-004", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Idler", bdDate: "2026-09-11 07:00", "", statusSounding: "WAJIB" },
+            { id: 91, code: "DZ-004", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Idler", bdDate: "2026-09-11 07:00", soundingDate: "", statusSounding: "WAJIB" },
             { id: 92, code: "DZ-017", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 93, code: "DZ-018", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Maintenance di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 94, code: "DZ-019", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal E", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 95, code: "DZ-005", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Radiator", bdDate: "2026-09-03 07:00", "", statusSounding: "WAJIB" },
+            { id: 95, code: "DZ-005", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Radiator", bdDate: "2026-09-03 07:00", soundingDate: "", statusSounding: "WAJIB" },
             { id: 96, code: "DZ-007", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Standby ready Parkir - Spare", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 97, code: "DZ-008", category: "DOZER", statusUnit: "NO OPERATOR", desc: "KOMATSU D85E-SS - Operator tanpa keterangan", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 98, code: "DZ-014", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 99, code: "DZ-015", category: "DOZER", statusUnit: "RFU", desc: "CAT D6RD - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 100, code: "VB-GSS 502", category: "GRADER", statusUnit: "RFU", desc: "HAMM - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
             { id: 101, code: "GD-004", category: "GRADER", statusUnit: "RFU", desc: "SANY - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 102, code: "GD-005", category: "GRADER", statusUnit: "GRADER", statusUnit: "RFU", desc: "SANY - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
-            { id: 103, code: "GD-001", category: "GRADER", statusUnit: "BD", desc: "SANY - Trouble Shooting back and Front", bdDate: "2026-01-28 16:05", "", statusSounding: "WAJIB" }
+            { id: 102, code: "GD-005", category: "GRADER", statusUnit: "RFU", desc: "SANY - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 103, code: "GD-001", category: "GRADER", statusUnit: "BD", desc: "SANY - Trouble Shooting back and Front", bdDate: "2026-01-28 16:05", soundingDate: "", statusSounding: "WAJIB" }
         ];
 
         let unitsData = [...defaultUnits];
 
         async function loadDataFromCloud() {
-            if (!scriptURL) {
-                renderTable();
-                return;
-            }
-
-            // Ambil cache lokal terlebih dahulu agar langsung tampil instan
+            // Muat dari memori lokal dulu agar instan
             let cached = localStorage.getItem('tmms_units_cache');
             if (cached) {
                 try {
@@ -283,18 +277,31 @@
                 } catch(e) {}
             }
 
+            if (!scriptURL) return;
+
             document.getElementById("loading").classList.remove("hidden");
             try {
                 let response = await fetch(scriptURL);
                 let cloudData = await response.json();
+
                 if (cloudData && cloudData.length > 0) {
+                    // Gabungkan status lokal "SUDAH" jika cloud belum terupdate
+                    if (cached) {
+                        let localMap = new Map(JSON.parse(cached).map(u => [String(u.id), u]));
+                        cloudData.forEach(cloudUnit => {
+                            let localUnit = localMap.get(String(cloudUnit.id));
+                            if (localUnit && localUnit.statusSounding === 'SUDAH') {
+                                cloudUnit.statusSounding = localUnit.statusSounding;
+                                cloudUnit.soundingDate = localUnit.soundingDate;
+                            }
+                        });
+                    }
                     unitsData = cloudData;
                     localStorage.setItem('tmms_units_cache', JSON.stringify(unitsData));
+                    filterTable();
                 }
-                filterTable();
             } catch (error) {
-                console.error("Gagal memuat cloud:", error);
-                filterTable();
+                console.error("Gagal memuat dari cloud:", error);
             }
             document.getElementById("loading").classList.add("hidden");
         }
@@ -378,25 +385,32 @@
             let newStatus = unit.statusSounding === 'SUDAH' ? 'WAJIB' : 'SUDAH';
             let newDate = newStatus === 'SUDAH' ? todayStr : '';
 
-            // Update status lokal
+            // Update status di memori lokal
             unit.statusSounding = newStatus;
             unit.soundingDate = newDate;
 
-            // Simpan ke cache lokal browser agar aman dari reset
+            // Simpan di cache browser
             localStorage.setItem('tmms_units_cache', JSON.stringify(unitsData));
             filterTable();
 
-            // Kirim ke Google Sheets
+            // Kirim ke Google Sheets dengan format text/plain (bypass CORS & auto flush)
             if (scriptURL) {
                 try {
+                    const payload = JSON.stringify({
+                        action: 'update',
+                        id: id,
+                        statusSounding: newStatus,
+                        soundingDate: newDate
+                    });
+
                     await fetch(scriptURL, {
                         method: 'POST',
                         mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'update', id: id, statusSounding: newStatus, soundingDate: newDate })
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: payload
                     });
                 } catch (error) {
-                    console.error('Error syncing:', error);
+                    console.error('Gagal memperbarui Google Sheets:', error);
                 }
             }
         }
@@ -488,6 +502,7 @@
             document.body.removeChild(link);
         }
 
+        // Muat data saat halaman pertama kali dibuka
         loadDataFromCloud();
     </script>
 </body>
