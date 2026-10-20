@@ -156,7 +156,7 @@
 
     <!-- JavaScript Logic -->
     <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbzF-j66goFskIRwwLfmRPi7S6579ZKMiIEc8RN6qHzW4eDMICVI9lsDrUhb40TK8o_W/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbw54g92eMbOd3nzzU4dDGzoE3YnI4oBZFGxPgTMH-nuY579KwsXliANWZgpGx--AjqI/exec';
         let reportDate = new Date();
 
         // Master Data Populasi Unit PT TMMS
@@ -269,7 +269,7 @@
         let unitsData = [...defaultUnits];
 
         async function loadDataFromCloud() {
-            if (!scriptURL || scriptURL === 'https://script.google.com/macros/s/AKfycbzF-j66goFskIRwwLfmRPi7S6579ZKMiIEc8RN6qHzW4eDMICVI9lsDrUhb40TK8o_W/exec') {
+            if (!scriptURL || scriptURL === 'https://script.google.com/macros/s/AKfycbw54g92eMbOd3nzzU4dDGzoE3YnI4oBZFGxPgTMH-nuY579KwsXliANWZgpGx--AjqI/exec') {
                 renderTable();
                 return;
             }
@@ -372,7 +372,7 @@
             unit.soundingDate = newDate;
             filterTable(); // Refresh tabel dengan filter aktif
 
-            if (scriptURL && scriptURL !== 'https://script.google.com/macros/s/AKfycbzF-j66goFskIRwwLfmRPi7S6579ZKMiIEc8RN6qHzW4eDMICVI9lsDrUhb40TK8o_W/exec') {
+            if (scriptURL && scriptURL !== 'https://script.google.com/macros/s/AKfycbw54g92eMbOd3nzzU4dDGzoE3YnI4oBZFGxPgTMH-nuY579KwsXliANWZgpGx--AjqI/exec') {
                 try {
                     await fetch(scriptURL, {
                         method: 'POST',
