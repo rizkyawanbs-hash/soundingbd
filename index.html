@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Unit Sounding & Daily Equipment - PT TMMS</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF.js untuk membaca file PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-500 text-slate-900 p-2.5 rounded-lg font-bold text-xl">
+                    <i class="fa-solid fa-truck-monster"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">DATA UNIT SOUNDING & DAILY EQUIPMENT</h1>
+                    <p class="text-xs text-slate-400">PT. Tambang Meranti Mulia Sejahtera (PT TMMS) • Cloud Sync</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="loadDataFromCloud()" class="bg-blue-600 hover:bg-blue-500 px-3.5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-rotate"></i> Refresh Data
+                </button>
+                <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-file-excel"></i> Export CSV
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Upload PDF Box Section -->
+        <div class="bg-gradient-to-r from-blue-900 to-slate-800 text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="space-y-2">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf text-red-400 text-xl"></i> Upload PDF Daily Equipment Harian
+                </h2>
+                <p class="text-sm text-slate-300">
+                    Upload file PDF laporan harian shift Anda di sini. Status unit (BD / RFU) dan durasi akan otomatis diperbarui.
+                </p>
+            </div>
+            <div class="w-full md:w-auto flex items-center gap-3">
+                <label class="cursor-pointer bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-5 py-3 rounded-xl transition shadow-md flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Pilih File PDF
+                    <input type="file" id="pdfFileDrop" accept=".pdf" class="hidden" onchange="handlePdfUpload(event)">
+                </label>
+            </div>
+        </div>
+
+        <div id="loading" class="bg-blue-50 text-blue-700 p-4 rounded-xl text-center font-semibold hidden">
+            <i class="fa-solid fa-spinner fa-spin"></i> Memproses PDF dan menyinkronkan data...
+        </div>
+
+        <!-- Dashboard Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Populasi Unit</p>
+                    <h3 id="statTotal" class="text-2xl font-extrabold text-slate-800 mt-1">0</h3>
+                </div>
+                <div class="bg-blue-50 text-blue-600 p-3.5 rounded-xl text-lg">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Wajib Sounding (BD > 2H)</p>
+                    <h3 id="statWajib" class="text-2xl font-extrabold text-red-600 mt-1">0</h3>
+                </div>
+                <div class="bg-red-50 text-red-600 p-3.5 rounded-xl text-lg">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sudah Sounding</p>
+                    <h3 id="statSudah" class="text-2xl font-extrabold text-emerald-600 mt-1">0</h3>
+                </div>
+                <div class="bg-emerald-50 text-emerald-600 p-3.5 rounded-xl text-lg">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Unit Ready (RFU)</p>
+                    <h3 id="statRfu" class="text-2xl font-extrabold text-sky-600 mt-1">0</h3>
+                </div>
+                <div class="bg-sky-50 text-sky-600 p-3.5 rounded-xl text-lg">
+                    <i class="fa-solid fa-circle-play"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Section -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="relative w-full md:w-80">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari unit atau kendala..." class="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <select id="filterStatus" onchange="filterTable()" class="text-sm border border-slate-200 px-3 py-2 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <option value="ALL">Semua Status Sounding</option>
+                    <option value="WAJIB">Wajib Sounding (BD > 2 Hari)</option>
+                    <option value="SUDAH">Sudah Sounding (Hijau)</option>
+                </select>
+                <select id="filterCategory" onchange="filterTable()" class="text-sm border border-slate-200 px-3 py-2 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <option value="ALL">Semua Kategori Unit</option>
+                    <option value="EXCAVATOR">Excavator</option>
+                    <option value="GSS">GSS / Support</option>
+                    <option value="DUMP TRUCK">Dump Truck (DT)</option>
+                    <option value="DOZER">Dozer (DZ)</option>
+                    <option value="GRADER">Grader / Lainnya</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Main Table Container -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table id="unitTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200">
+                            <th class="py-3 px-4 font-bold">No</th>
+                            <th class="py-3 px-4 font-bold">Kode Unit</th>
+                            <th class="py-3 px-4 font-bold">Kategori</th>
+                            <th class="py-3 px-4 font-bold">Status Unit & Kendala</th>
+                            <th class="py-3 px-4 font-bold">Tanggal BD</th>
+                            <th class="py-3 px-4 font-bold">Durasi BD</th>
+                            <th class="py-3 px-4 font-bold">Tanggal Sounding</th>
+                            <th class="py-3 px-4 font-bold text-center">Control Data</th>
+                            <th class="py-3 px-4 font-bold text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const scriptURL = 'PASTE_WEB_APP_URL_ANDA_DI_SINI';
+        let reportDate = new Date();
+
+        // Master Data Populasi Unit PT TMMS
+        const defaultUnits = [
+            { id: 1, code: "EXCAT-01", category: "EXCAVATOR", statusUnit: "BD", desc: "Caterpillar 340D - Can't start", bdDate: "2026-10-17 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 2, code: "EXCAT-02", category: "EXCAVATOR", statusUnit: "BD", desc: "Caterpillar 345GC - Pen cylinder boom", bdDate: "2026-10-05 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 3, code: "EXCAT-03", category: "EXCAVATOR", statusUnit: "BD", desc: "Caterpillar 345GC - Autolube", bdDate: "2026-10-18 18:10", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 4, code: "EXSY-014", category: "EXCAVATOR", statusUnit: "RFU", desc: "SANY 500 - Loading ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 5, code: "EX-3.04", category: "EXCAVATOR", statusUnit: "RFU", desc: "SUNWARD 365 - Waiting for instruction - PIT", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 6, code: "EX-3.05", category: "EXCAVATOR", statusUnit: "BD", desc: "SUNWARD 365 - Waiting part hose oil filter", bdDate: "2026-09-28 16:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 7, code: "EX-3.06", category: "EXCAVATOR", statusUnit: "RFU", desc: "SUMITOMO 360 - Loading ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 8, code: "EX-3.07", category: "EXCAVATOR", statusUnit: "RFU", desc: "SUNWARD 365 - Loading ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 9, code: "EX-3.08", category: "EXCAVATOR", statusUnit: "RFU", desc: "SUNWARD 365 - Loading ORE di ETO 10", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 10, code: "EX-3.10", category: "EXCAVATOR", statusUnit: "RFU", desc: "SUMITOMO 360 - Loading ORE di ETO 6", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 11, code: "EX-3.11", category: "EXCAVATOR", statusUnit: "RFU", desc: "SUMITOMO 360 - Loading ORE/OB di DTN 13", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 12, code: "EX-3.12", category: "EXCAVATOR", statusUnit: "BD", desc: "SANY SY365H - Valve circle", bdDate: "2026-10-17 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 13, code: "EX-052", category: "EXCAVATOR", statusUnit: "BD", desc: "SANY SY215C - Hose breaker", bdDate: "2026-10-20 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 14, code: "EX-053", category: "EXCAVATOR", statusUnit: "RFU", desc: "SANY SY215C - Stock Quarry di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 15, code: "EX-045", category: "EXCAVATOR", statusUnit: "BD", desc: "SUNWARD 210 - Pen Tahu", bdDate: "2026-07-28 19:48", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 16, code: "GSS-039", category: "GSS", statusUnit: "BD", desc: "SHD 210 D - Track lepas", bdDate: "2026-10-20 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 17, code: "GSS-040", category: "GSS", statusUnit: "RFU", desc: "SHD 210 D - Loading Quarry di DTN 13", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 18, code: "GSS-044", category: "GSS", statusUnit: "RFU", desc: "SHD 210 D - Trimming ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 19, code: "GSS-215", category: "GSS", statusUnit: "RFU", desc: "SHD 210 D - Support area camp", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 20, code: "GSS-216", category: "GSS", statusUnit: "RFU", desc: "SHD 210 D - Trimming OB di Disposal N", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 21, code: "GSS-217", category: "GSS", statusUnit: "RFU", desc: "SHD 210 D - Trimming ORE di ETO 8", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 22, code: "SAP-03", category: "GSS", statusUnit: "RFU", desc: "SANY SY215C - Trimming ORE di ETO 10", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 23, code: "SAP-04", category: "GSS", statusUnit: "BD", desc: "SANY SY215C - Lock system", bdDate: "2026-07-12 16:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 24, code: "EX-046", category: "GSS", statusUnit: "RFU", desc: "SANY SY215C - Trimming OB di Disposal E", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 25, code: "EX-047", category: "GSS", statusUnit: "RFU", desc: "SANY SY215C - Trimming ORE di EFO Sample house", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 26, code: "EX-048", category: "GSS", statusUnit: "RFU", desc: "SANY SY215C - Loading Quarry di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 27, code: "EX-049", category: "GSS", statusUnit: "RFU", desc: "SANY SY215C - Trimming ORE di ETO 6", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 28, code: "EX-050", category: "GSS", statusUnit: "RFU", desc: "SANY SY215C - Trimming CRE di EFO Gorong-gorong", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 29, code: "EX-051", category: "GSS", statusUnit: "RFU", desc: "SANY SY215C - Trimming OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 30, code: "EX-018", category: "GSS", statusUnit: "NO OPERATOR", desc: "SUNWARD 210 - Operator tanpa keterangan", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 31, code: "EX-021", category: "GSS", statusUnit: "RFU", desc: "SUNWARD 210 - Perapian dome di EFO Gorong-gorong", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 32, code: "EX-022", category: "GSS", statusUnit: "BD", desc: "SUNWARD 210 - Motor gas", bdDate: "2026-10-08 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 33, code: "EX-023", category: "GSS", statusUnit: "BD", desc: "SUNWARD 210 - Can't start", bdDate: "2026-10-20 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 34, code: "EX-017", category: "GSS", statusUnit: "BD", desc: "SANY SY215C - Busing Bucket", bdDate: "2026-09-23 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 35, code: "EX-032", category: "GSS", statusUnit: "BD", desc: "SANY SY215C - Seal cylinder arm", bdDate: "2026-09-07 13:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 36, code: "EX-033", category: "GSS", statusUnit: "BD", desc: "SANY SY215C - Hose Cylinder Bucket", bdDate: "2026-08-27 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 37, code: "DT-078", category: "DUMP TRUCK", statusUnit: "NO DRIVER", desc: "SANY - Driver sakit", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 38, code: "DT-079", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTN 13", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 39, code: "DT-080", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Support area camp", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 40, code: "DT-081", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 41, code: "DT-082", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTN 13", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 42, code: "DT-095", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SHACMAN - Hauling ORE di ETO 10", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 43, code: "DT-096", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SHACMAN - Hauling ORE di ETO 10", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 44, code: "DT-097", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SHACMAN - Hauling ORE di ETO 10", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 45, code: "DT-098", category: "DUMP TRUCK", statusUnit: "BD", desc: "SHACMAN - Can't Start", bdDate: "2026-10-19 11:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 46, code: "DT-099", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SHACMAN - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 47, code: "DT-100", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SHACMAN - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 48, code: "DT-101", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SHACMAN - Hauling ORE di ETO 10", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 49, code: "DT-102", category: "DUMP TRUCK", statusUnit: "BD", desc: "SHACMAN - Demob - End of contract", bdDate: "2026-10-20 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 50, code: "DT-103", category: "DUMP TRUCK", statusUnit: "BD", desc: "SHACMAN - Demob - End of contract", bdDate: "2026-10-20 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 51, code: "DT-104", category: "DUMP TRUCK", statusUnit: "BD", desc: "SHACMAN - Demob - End of contract", bdDate: "2026-10-20 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 52, code: "DT-105", category: "DUMP TRUCK", statusUnit: "BD", desc: "SHACMAN - Demob - End of contract", bdDate: "2026-10-20 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 53, code: "DT-109", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 10", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 54, code: "DT-110", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 55, code: "DT-111", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling Quarry di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 56, code: "DT-112", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 57, code: "DT-113", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling Quarry di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 58, code: "DT-114", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 59, code: "DT-115", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Washing", bdDate: "2026-10-20 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 60, code: "DT-116", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 61, code: "DT-117", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling Quarry di DTN 13", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 62, code: "DT-118", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 63, code: "DT-125", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 10", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 64, code: "DT-126", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 65, code: "DT-127", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 66, code: "DT-128", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 67, code: "DT-129", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTN 13", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 68, code: "DT-130", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 69, code: "DT-131", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE/OB di DTN 13", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 70, code: "DT-060", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 6", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 71, code: "DT-061", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Gardan", bdDate: "2026-09-06 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 72, code: "DT-062", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling CRE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 73, code: "DT-063", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 6", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 74, code: "DT-069", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Seal crankshaft", bdDate: "2026-10-09 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 75, code: "DT-070", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 76, code: "DT-071", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 77, code: "DT-072", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 78, code: "DT-073", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 79, code: "DT-074", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 80, code: "DT-075", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 81, code: "DT-076", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 82, code: "DT-077", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Transfer case", bdDate: "2026-10-04 09:25", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 83, code: "DT-085", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 84, code: "DT-086", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 85, code: "DT-087", category: "DUMP TRUCK", statusUnit: "RFU", desc: "SANY - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 86, code: "DT-092", category: "DUMP TRUCK", statusUnit: "RFU", desc: "FOTON - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 87, code: "DT-059", category: "DUMP TRUCK", statusUnit: "BD", desc: "SANY - Engine Overhaul", bdDate: "2025-09-30 19:45", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 88, code: "DT-093", category: "DUMP TRUCK", statusUnit: "RFU", desc: "FOTON - Hauling ORE di ETO 9", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 89, code: "DZ-001", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal N", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 90, code: "DZ-002", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Standby ready Parkir - Spare", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 91, code: "DZ-004", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Idler", bdDate: "2026-09-11 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 92, code: "DZ-017", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 93, code: "DZ-018", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Maintenance di DTC 5", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 94, code: "DZ-019", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal E", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 95, code: "DZ-005", category: "DOZER", statusUnit: "BD", desc: "KOMATSU D85E-SS - Radiator", bdDate: "2026-09-03 07:00", soundingDate: "", statusSounding: "WAJIB" },
+            { id: 96, code: "DZ-007", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Standby ready Parkir - Spare", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 97, code: "DZ-008", category: "DOZER", statusUnit: "NO OPERATOR", desc: "KOMATSU D85E-SS - Operator tanpa keterangan", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 98, code: "DZ-014", category: "DOZER", statusUnit: "RFU", desc: "KOMATSU D85E-SS - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 99, code: "DZ-015", category: "DOZER", statusUnit: "RFU", desc: "CAT D6RD - Dozing OB di Disposal Oheo", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 100, code: "VB-GSS 502", category: "GRADER", statusUnit: "RFU", desc: "HAMM - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 101, code: "GD-004", category: "GRADER", statusUnit: "RFU", desc: "SANY - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 102, code: "GD-005", category: "GRADER", statusUnit: "RFU", desc: "SANY - Maintenance hauling road", bdDate: "", soundingDate: "2026-10-20", statusSounding: "RFU" },
+            { id: 103, code: "GD-001", category: "GRADER", statusUnit: "BD", desc: "SANY - Trouble Shooting back and Front", bdDate: "2026-01-28 16:05", soundingDate: "", statusSounding: "WAJIB" }
+        ];
+
+        let unitsData = [...defaultUnits];
+
+        async function loadDataFromCloud() {
+            if (!scriptURL || scriptURL === 'PASTE_WEB_APP_URL_ANDA_DI_SINI') {
+                renderTable();
+                return;
+            }
+            document.getElementById("loading").classList.remove("hidden");
+            try {
+                let response = await fetch(scriptURL);
+                let cloudData = await response.json();
+                if (cloudData && cloudData.length > 0) {
+                    unitsData = cloudData;
+                }
+                renderTable();
+            } catch (error) {
+                console.error("Gagal memuat cloud:", error);
+                renderTable();
+            }
+            document.getElementById("loading").classList.add("hidden");
+        }
+
+        function calculateDaysBD(bdDateStr) {
+            if (!bdDateStr) return 0;
+            const bd = new Date(bdDateStr);
+            if (isNaN(bd.getTime())) return 0;
+            const diffTime = reportDate - bd;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 ? diffDays : 0;
+        }
+
+        function renderTable(dataToRender = unitsData) {
+            const tbody = document.querySelector("#unitTable tbody");
+            tbody.innerHTML = "";
+
+            let total = dataToRender.length;
+            let wajibCount = 0;
+            let sudahCount = 0;
+            let rfuCount = 0;
+
+            // Hitung statistik keseluruhan dari data utama
+            unitsData.forEach((item) => {
+                let bdDays = calculateDaysBD(item.bdDate);
+                let todayStr = reportDate.toISOString().slice(0, 10);
+                let isWajib = (item.statusUnit === 'BD' && bdDays > 2 && item.soundingDate !== todayStr);
+                
+                if (isWajib && item.statusSounding !== 'SUDAH') item.statusSounding = 'WAJIB';
+                else if (item.statusUnit !== 'BD') item.statusSounding = 'RFU';
+
+                if (item.statusSounding === 'WAJIB') wajibCount++;
+                else if (item.statusSounding === 'SUDAH') sudahCount++;
+                else rfuCount++;
+            });
+
+            dataToRender.forEach((item, index) => {
+                let bdDays = calculateDaysBD(item.bdDate);
+
+                let badgeControl = '';
+                if (item.statusSounding === 'WAJIB') {
+                    badgeControl = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">WAJIB SOUNDING</span>`;
+                } else if (item.statusSounding === 'SUDAH') {
+                    badgeControl = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">SUDAH SOUNDING</span>`;
+                } else {
+                    badgeControl = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-700">READY (RFU)</span>`;
+                }
+
+                let tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50/80 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-slate-500 font-medium text-center">${index + 1}</td>
+                    <td class="py-3 px-4 font-bold text-slate-900">${item.code}</td>
+                    <td class="py-3 px-4 text-slate-600 text-xs font-semibold">${item.category}</td>
+                    <td class="py-3 px-4 text-xs">
+                        <span class="font-bold ${item.statusUnit === 'BD' ? 'text-red-600' : 'text-emerald-600'}">[${item.statusUnit}]</span> ${item.desc}
+                    </td>
+                    <td class="py-3 px-4 text-xs text-slate-600">${item.bdDate || '-'}</td>
+                    <td class="py-3 px-4 text-xs font-bold ${bdDays > 2 ? 'text-red-600' : 'text-slate-600'}">${item.statusUnit === 'BD' && item.bdDate ? bdDays + ' Hari' : '-'}</td>
+                    <td class="py-3 px-4 text-xs text-slate-600">${item.soundingDate || 'Belum'}</td>
+                    <td class="py-3 px-4 text-center">${badgeControl}</td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="updateSounding(${item.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow transition">
+                            <i class="fa-solid fa-check"></i> Sounding
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("statTotal").innerText = unitsData.length;
+            document.getElementById("statWajib").innerText = wajibCount;
+            document.getElementById("statSudah").innerText = sudahCount;
+            document.getElementById("statRfu").innerText = rfuCount;
+        }
+
+        async function updateSounding(id) {
+            let unit = unitsData.find(u => u.id == id);
+            if (!unit) return;
+
+            let todayStr = new Date().toISOString().slice(0, 10);
+            let newStatus = unit.statusSounding === 'SUDAH' ? 'WAJIB' : 'SUDAH';
+            let newDate = newStatus === 'SUDAH' ? todayStr : '';
+
+            unit.statusSounding = newStatus;
+            unit.soundingDate = newDate;
+            filterTable(); // Refresh tabel dengan filter aktif
+
+            if (scriptURL && scriptURL !== 'https://script.google.com/macros/s/AKfycbwdyYAo8QpLAWC56eIO385hp59iZLggzUDZeE_6UTVvC0Q-gxfxIVsLncZViSP_UjBf/exec') {
+                try {
+                    await fetch(scriptURL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'update', id: id, statusSounding: newStatus, soundingDate: newDate })
+                    });
+                } catch (error) {
+                    console.error('Error syncing:', error);
+                }
+            }
+        }
+
+        async function handlePdfUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById("loading").classList.remove("hidden");
+            const reader = new FileReader();
+            reader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                try {
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(" ") + " ";
+                    }
+
+                    let updatedCount = 0;
+                    unitsData.forEach(unit => {
+                        let cleanCode = unit.code.replace(/[^a-zA-Z0-9.-]/g, '');
+                        if (fullText.includes(cleanCode)) {
+                            let unitSnippetIndex = fullText.indexOf(cleanCode);
+                            let snippet = fullText.substring(unitSnippetIndex, unitSnippetIndex + 100);
+                            
+                            if (snippet.includes("RFU") || snippet.includes("Loading") || snippet.includes("Dozing")) {
+                                unit.statusUnit = "RFU";
+                                unit.statusSounding = "RFU";
+                                unit.bdDate = "";
+                                unit.soundingDate = new Date().toISOString().slice(0, 10);
+                                updatedCount++;
+                            }
+                        }
+                    });
+
+                    filterTable();
+                    alert(`Berhasil memproses PDF! ${updatedCount} status unit diperbarui.`);
+                } catch (error) {
+                    console.error("Error PDF:", error);
+                    alert("Gagal membaca file PDF.");
+                }
+                document.getElementById("loading").classList.add("hidden");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function filterTable() {
+            const search = document.getElementById("searchInput").value.toLowerCase();
+            const statusFilter = document.getElementById("filterStatus").value;
+            const categoryFilter = document.getElementById("filterCategory").value;
+
+            const filtered = unitsData.filter(item => {
+                let bdDays = calculateDaysBD(item.bdDate);
+                let todayStr = reportDate.toISOString().slice(0, 10);
+                let isWajib = (item.statusUnit === 'BD' && bdDays > 2 && item.soundingDate !== todayStr);
+
+                const matchSearch = item.code.toLowerCase().includes(search) || item.desc.toLowerCase().includes(search);
+                
+                // Logika Filter Status Wajib Sounding (hanya tampilkan yang BD > 2 Hari dan belum sounding)
+                let matchStatus = true;
+                if (statusFilter === 'WAJIB') {
+                    matchStatus = isWajib && item.statusSounding !== 'SUDAH';
+                } else if (statusFilter === 'SUDAH') {
+                    matchStatus = (item.statusSounding === 'SUDAH');
+                }
+
+                const matchCategory = (categoryFilter === 'ALL' || item.category === categoryFilter);
+                return matchSearch && matchStatus && matchCategory;
+            });
+
+            renderTable(filtered);
+        }
+
+        function exportToCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,No,Kode Unit,Kategori,Status Unit,Keterangan,Tanggal BD,Durasi BD,Tanggal Sounding,Status Sounding\n";
+            unitsData.forEach((u, i) => {
+                let bdDays = calculateDaysBD(u.bdDate);
+                csvContent += `${i+1},"${u.code}","${u.category}","${u.statusUnit}","${u.desc}","${u.bdDate}","${bdDays} Hari","${u.soundingDate}","${u.statusSounding}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "data_sounding_unit_pt_tmms.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        loadDataFromCloud();
+    </script>
+</body>
+</html>
